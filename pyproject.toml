@@ -1,0 +1,14 @@
+[project]
+name = "fiap-tech-challenge-4"
+version = "0.1.0"
+description = "This project was developed for the ML Engineering Postgraduate Program, focused on building and end-to-end solution for stock price forecasting with an LSTM model."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.7",
+    "numpy>=2.3.4",
+    "pandas>=2.3.3",
+    "plotly>=6.3.1",
+    "torch>=2.9.0",
+    "yfinance>=0.2.66",
+]
