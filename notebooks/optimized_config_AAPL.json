@@ -1,0 +1,90 @@
+{
+  "ticker": "AAPL",
+  "interval": "1d",
+  "period": "5y",
+  "adjusted": true,
+  "multi_level_index": false,
+  "seed": 42,
+  "device": "cpu",
+  "lookback": 75,
+  "horizon": 1,
+  "target": "r_close",
+  "features": {
+    "lags": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "rolling_returns": {
+      "windows": [
+        5,
+        20
+      ],
+      "agg": [
+        "sum",
+        "mean"
+      ]
+    },
+    "rolling_volatility": [
+      10,
+      20
+    ],
+    "range_features": true,
+    "technicals": {
+      "sma": [
+        5,
+        20
+      ],
+      "ema": [
+        12,
+        26
+      ],
+      "rsi": [
+        14
+      ],
+      "macd": {
+        "fast": 12,
+        "slow": 26,
+        "signal": 9
+      },
+      "bollinger": {
+        "window": 20,
+        "k": 2
+      },
+      "atr": {
+        "window": 14
+      }
+    },
+    "volume": {
+      "log_volume": true,
+      "vol_sma": [
+        5,
+        20
+      ]
+    },
+    "calendar": {
+      "day_of_week": true
+    },
+    "scaler": "RobustScaler",
+    "fit_on_train_only": true
+  },
+  "train_ratio": 0.7,
+  "val_ratio": 0.15,
+  "test_ratio": 0.15,
+  "model": {
+    "hidden_size": 256,
+    "num_layers": 4,
+    "dropout": 0.25,
+    "bidirectional": true
+  },
+  "train": {
+    "batch_size": 32,
+    "epochs": 100,
+    "learning_rate": 0.00033829340035112685,
+    "weight_decay": 2.01936488366226e-05,
+    "early_stopping_patience": 10,
+    "loss": "mse",
+    "grad_clip": 1.5
+  }
+}

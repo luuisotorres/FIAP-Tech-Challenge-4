@@ -1,0 +1,13 @@
+{
+  "hidden_size": 256,
+  "num_layers": 4,
+  "dropout": 0.25,
+  "bidirectional": true,
+  "batch_size": 32,
+  "learning_rate": 0.00033829340035112685,
+  "weight_decay": 2.01936488366226e-05,
+  "grad_clip": 1.5,
+  "lookback": 75,
+  "scaler_type": "RobustScaler",
+  "loss_function": "mse"
+}
