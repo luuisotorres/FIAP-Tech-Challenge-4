@@ -6,6 +6,7 @@ def test_placeholder():
     print("This is a test!")
     assert True
 
+
 def test_add():
     """Test if the import is working."""
     assert add(2, 4) == 6
