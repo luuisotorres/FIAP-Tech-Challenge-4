@@ -4,7 +4,7 @@ from fiap_tech_challenge_4.config import DataStrategyConfig, TechnicalsConfig, M
 from fiap_tech_challenge_4.features.strategies import TrendFollowingStrategy, MeanReversionStrategy
 
 def test_trend_strategy_columns(mock_stock_df):
-    # 1. Configure
+    # Configure
     cfg = DataStrategyConfig(
         ticker="AAPL",
         strategy_type="trend",
@@ -12,11 +12,11 @@ def test_trend_strategy_columns(mock_stock_df):
         technicals=TechnicalsConfig(sma=[10], macd=MacdConfig())
     )
     
-    # 2. Run Strategy
+    # Run Strategy
     strat = TrendFollowingStrategy(cfg)
     result = strat.apply_features(mock_stock_df)
     
-    # 3. Assert Columns exist
+    # Assert Columns exist
     cols = result.columns
     assert "r_close" in cols       # Base
     assert "sma_10" in cols        # Configured SMA
