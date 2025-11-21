@@ -38,9 +38,9 @@ def fetch_data(
             f"No data found for ticker '{ticker}' (Period: {period}, Interval: {interval})."
         )
 
-    df.columns = df.columns.str.lower().str.strip()
-
     df = df.reset_index()
+
+    df.columns = df.columns.str.lower().str.strip()
     
     date_col = "date" if "date" in df.columns else "datetime"
     if date_col not in df.columns:
