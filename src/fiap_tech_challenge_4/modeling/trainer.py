@@ -24,60 +24,70 @@ class ModelTrainer:
     def train(self) -> str:
         """Executes training and returns the run_id."""
 
-        # 1. Select Strategy
-        if self.cfg.data.strategy_type == "trend":
-            strategy = TrendFollowingStrategy(self.cfg.data)
-        elif self.cfg.data.strategy_type == "mean_reversion":
-            strategy = MeanReversionStrategy(self.cfg.data)
-        else:
-            raise ValueError(
-                f"Unknown strategy: {self.cfg.data.strategy_type}")
-
-        # 2. Run Pipeline
-        pipeline = DataPipeline(strategy, self.cfg.data)
-        loaders = pipeline.run()
-
-        # 3. Dynamic Architecture Initialization
-        # Detect input_dim from the generated data (Batch, Seq, Features)
-        sample_batch, _ = next(iter(loaders["train"]))
-        input_dim = sample_batch.shape[2]
-
-        print(f"Detected input dimension: {input_dim}")
-
-        model = StockLSTM(
-            input_dim=input_dim,
-            **self.cfg.model.model_dump()
-        )
-
-        # 4. Setup Lightning
-        lit_module = LSTMLightningModule(
-            model, learning_rate=self.cfg.learning_rate)
-
-        # Use MLflow run ID if active, else generic
-        run = mlflow.active_run()
-        run_id = run.info.run_id if run else "local_run"
-
         logger = MLFlowLogger(
             experiment_name=self.cfg.experiment_name,
-            run_id=run_id
+            log_model=True
         )
 
-        trainer = pl.Trainer(
-            max_epochs=self.cfg.epochs,
-            logger=logger,
-            accelerator="auto",
-            devices=1,
-            enable_progress_bar=True,
-            log_every_n_steps=1
-        )
+        run_id = logger.run_id
+        print(f"🚀 Active MLflow Run ID: {run_id}")
 
-        # 5. Train
-        trainer.fit(lit_module, loaders["train"], loaders["val"])
 
-        # 6. Save Artifacts
-        self._save_artifacts(pipeline, model, run_id)
+        with mlflow.start_run(run_id=run_id):
+            # Select Strategy
+            if self.cfg.data.strategy_type == "trend":
+                strategy = TrendFollowingStrategy(self.cfg.data)
+            elif self.cfg.data.strategy_type == "mean_reversion":
+                strategy = MeanReversionStrategy(self.cfg.data)
+            else:
+                raise ValueError(
+                    f"Unknown strategy: {self.cfg.data.strategy_type}")
 
-        return run_id
+            # Run Pipeline
+            pipeline = DataPipeline(strategy, self.cfg.data)
+            loaders = pipeline.run()
+
+            # Dynamic Architecture Initialization
+            # Detect input_dim from the generated data (Batch, Seq, Features)
+            sample_batch, _ = next(iter(loaders["train"]))
+            input_dim = sample_batch.shape[2]
+
+            print(f"Detected input dimension: {input_dim}")
+
+            model = StockLSTM(
+                input_dim=input_dim,
+                **self.cfg.model.model_dump()
+            )
+
+            # Setup Lightning
+            lit_module = LSTMLightningModule(
+                model, learning_rate=self.cfg.learning_rate)
+
+            # Use MLflow run ID if active, else generic
+            run = mlflow.active_run()
+            run_id = run.info.run_id if run else "local_run"
+
+            logger = MLFlowLogger(
+                experiment_name=self.cfg.experiment_name,
+                run_id=run_id
+            )
+
+            trainer = pl.Trainer(
+                max_epochs=self.cfg.epochs,
+                logger=logger,
+                accelerator="auto",
+                devices=1,
+                enable_progress_bar=True,
+                log_every_n_steps=1
+            )
+
+            # Train
+            trainer.fit(lit_module, loaders["train"], loaders["val"])
+
+            # Save Artifacts
+            self._save_artifacts(pipeline, model, run_id)
+
+            return run_id
 
     def _save_artifacts(self, pipeline: DataPipeline, model: torch.nn.Module, run_id: str):
         """Saves weights, config, and scalers to disk."""

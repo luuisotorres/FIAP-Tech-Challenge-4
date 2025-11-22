@@ -32,6 +32,8 @@ def mock_stock_df():
     return df.reset_index().rename(columns={"index": "ts"})
 
 
+@patch("fiap_tech_challenge_4.modeling.trainer.MLFlowLogger")
+@patch("fiap_tech_challenge_4.modeling.trainer.mlflow")
 @patch("fiap_tech_challenge_4.features.pipeline.fetch_data")
 def test_trainer_orchestration(mock_fetch, mock_stock_df, clean_artifacts):
     """
