@@ -1,16 +1,18 @@
 import pytest
-import torch
 import shutil
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, PropertyMock
 
-from fiap_tech_challenge_4.config import TrainingConfig, DataStrategyConfig, ModelParams, TechnicalsConfig
+from fiap_tech_challenge_4.config import (
+    TrainingConfig,
+    DataStrategyConfig,
+    TechnicalsConfig
+)
 from fiap_tech_challenge_4.modeling.trainer import ModelTrainer
 
 
 @pytest.fixture
 def clean_artifacts():
-    """Clean up artifacts created during tests."""
     yield
     if Path("artifacts").exists():
         shutil.rmtree("artifacts")
@@ -35,53 +37,56 @@ def mock_stock_df():
 @patch("fiap_tech_challenge_4.modeling.trainer.MLFlowLogger")
 @patch("fiap_tech_challenge_4.modeling.trainer.mlflow")
 @patch("fiap_tech_challenge_4.features.pipeline.fetch_data")
-def test_trainer_orchestration(mock_fetch, mock_stock_df, clean_artifacts):
-    """
-    Verifies that ModelTrainer can:
-    1. Build the pipeline
-    2. Init the model with correct dimensions
-    3. Save artifacts
-    """
+def test_trainer_orchestration(mock_fetch, mock_mlflow, mock_logger_cls, mock_stock_df, clean_artifacts):
+    # Setup Data Mock
     mock_fetch.return_value = mock_stock_df
 
-    # Minimal config for speed
+    # Setup Logger Mock
+    mock_logger_instance = MagicMock()
+    type(mock_logger_instance).run_id = PropertyMock(
+        return_value="test_run_id")
+    mock_logger_cls.return_value = mock_logger_instance
+
+    # Setup Global MLflow Mock (Context Manager AND active_run)
+    # Create a "Run Object" mock that has the correct ID
+    mock_run_object = MagicMock()
+    mock_run_object.info.run_id = "test_run_id"
+
+    # Case A: used in 'with mlflow.start_run() as run:'
+    mock_mlflow.start_run.return_value.__enter__.return_value = mock_run_object
+
+    # Case B: used via 'mlflow.active_run()'
+    mock_mlflow.active_run.return_value = mock_run_object
+
+    # Configuration
     cfg = TrainingConfig(
         experiment_name="test_experiment",
         epochs=1,
         data=DataStrategyConfig(
             ticker="TEST",
             period="10d",
-            seq_len=5, 
+            seq_len=5,
             batch_size=2,
             train_split=0.5,
             rolling_windows=[5],
-            technicals=TechnicalsConfig(sma=[5], macd=None),
+            technicals=TechnicalsConfig(sma=[5], macd=None)
         ),
-        model={"hidden_dim": 8}  
+        model={"hidden_dim": 8}
     )
 
     trainer = ModelTrainer(cfg)
 
-    # We don't want to wait for actual training in unit tests
-    # But we want to ensure the code runs up to saving
+    # Execute with mocked Training loop
     with patch("pytorch_lightning.Trainer.fit") as mock_fit:
         run_id = trainer.train()
 
-        # Assert fit was called
+        # Assertions
+        assert run_id == "test_run_id"
         mock_fit.assert_called_once()
 
-        # Check Artifacts
-        # trainer.train() generates a run_id, usually 'local_run' if no mlflow server
-        # or a UUID if mlflow is mocked.
-        # Let's check if the folder exists.
-        artifact_path = Path("artifacts/test_experiment")
-        assert artifact_path.exists()
-
-        # Find the run folder (it might be a UUID or 'local_run')
-        run_folders = list(artifact_path.iterdir())
-        assert len(run_folders) > 0
-
-        saved_folder = run_folders[0]
-        assert (saved_folder / "model.pt").exists()
-        assert (saved_folder / "feature_scaler.pkl").exists()
-        assert (saved_folder / "config.json").exists()
+        # Verify Artifacts exist in the specific run folder
+        expected_path = Path("artifacts/test_experiment/test_run_id")
+        assert expected_path.exists()
+        assert (expected_path / "model.pt").exists()
+        assert (expected_path / "feature_scaler.pkl").exists()
+        assert (expected_path / "config.json").exists()
