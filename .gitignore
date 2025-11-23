@@ -213,3 +213,11 @@ __marimo__/
 
 # Thumbnails
 ._*
+
+# MLflow local storage
+mlruns/
+.trash/
+
+# Custom Artifacts folder (where our Trainer saves models)
+artifacts/
+.models/

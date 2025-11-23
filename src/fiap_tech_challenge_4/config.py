@@ -57,3 +57,9 @@ class TrainingConfig(BaseModel):
     # Composition
     data: DataStrategyConfig
     model: ModelParams = Field(default_factory=ModelParams)
+
+class ModelParams(BaseModel):
+    """Hyperparameters for the LSTM architecture."""
+    hidden_dim: int = 64
+    num_layers: int = 2
+    dropout: float = 0.2
