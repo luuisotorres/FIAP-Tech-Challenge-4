@@ -221,3 +221,5 @@ mlruns/
 # Custom Artifacts folder (where our Trainer saves models)
 artifacts/
 .models/
+
+[0-9]*/

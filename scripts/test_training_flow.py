@@ -1,10 +1,6 @@
-# scripts/test_training_flow.py
 import os
 import mlflow
 from dotenv import load_dotenv
-
-# # Ensure we can import from src
-# sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from fiap_tech_challenge_4.config import (
     TrainingConfig, 
