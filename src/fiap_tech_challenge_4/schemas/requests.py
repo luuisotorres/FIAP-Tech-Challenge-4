@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from fiap_tech_challenge_4.config import DataStrategyConfig, ModelParams
 
@@ -13,6 +13,40 @@ class TrainingRequest(BaseModel):
     data: DataStrategyConfig
     # Use Dict for model params to avoid Pydantic V2 conflict in nested init
     model: Dict[str, Any] = Field(default_factory=lambda: {"hidden_dim": 64}) 
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "experiment_name": "Smoke_Test_V1",
+                "epochs": 5,
+                "learning_rate": 0.001,
+                "data": {
+                    "ticker": "AAPL",
+                    "period": "1y",
+                    "interval": "1d",
+                    "strategy_type": "trend",
+                    "scaler_type": "robust",
+                    "train_split": 0.8,
+                    "seq_len": 30,
+                    "batch_size": 32,
+                    "rolling_windows": [5, 20],
+                    "technicals": {
+                        "sma": [20, 50],
+                        "macd": {
+                            "fast": 12,
+                            "slow": 26,
+                            "signal": 9
+                        }
+                    }
+                },
+                "model": {
+                    "hidden_dim": 64,
+                    "num_layers": 2,
+                    "dropout": 0.2
+                }
+            }
+        }
+    )
 
 class TrainingResponse(BaseModel):
     message: str
@@ -35,6 +69,23 @@ class PredictionRequest(BaseModel):
     """
     ticker: str
     candles: List[StockCandle] = Field(..., description="List of historical candles.")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "ticker": "AAPL",
+                "candles": [
+                    {
+                        "open": 150.0,
+                        "high": 155.0,
+                        "low": 149.0,
+                        "close": 153.0,
+                        "volume": 5000000.0
+                    }
+                ]
+            }
+        }
+    )
 
 class PredictionResponse(BaseModel):
     ticker: str
