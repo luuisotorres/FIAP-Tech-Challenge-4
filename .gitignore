@@ -223,3 +223,6 @@ artifacts/
 .models/
 
 [0-9]*/
+
+# Generated test data
+mock_payload.json

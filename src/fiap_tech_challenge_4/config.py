@@ -36,6 +36,27 @@ class DataStrategyConfig(BaseModel):
     rolling_windows: List[int] = Field(default_factory=lambda: [5, 20])
     technicals: TechnicalsConfig = Field(default_factory=TechnicalsConfig)
 
+    @property
+    def min_history_required(self) -> int:
+        """
+        Calculates how many days of data the client MUST send to avoid NaNs.
+        Formula: Sequence Length + Max Lag needed for feature engineering + Buffer.
+        """
+        # Get max window from rolling stats
+        max_rolling = max(self.rolling_windows) if self.rolling_windows else 0
+        
+        # Get max window from SMAs
+        max_sma = max(self.technicals.sma) if self.technicals.sma else 0
+        
+        # MACD usually requires 26 (slow) + 9 (signal) = ~35 days to settle
+        max_macd = 35 if self.technicals.macd else 0
+        
+        # We need the largest of these lags
+        max_lag = max(max_rolling, max_sma, max_macd)
+        
+        # We add a small buffer (5) for differencing offsets (diff)
+        return self.seq_len + max_lag + 5
+
 
 class ModelParams(BaseModel):
     """Hyperparameters for the LSTM architecture."""
