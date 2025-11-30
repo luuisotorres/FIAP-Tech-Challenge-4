@@ -12,9 +12,16 @@ from fiap_tech_challenge_4.data.loader import fetch_data
 
 
 class DataPipeline:
-    """Orchestrates data fetching, feature engineering, scaling, and loader creation."""
+    """
+    Orchestrates data ingestion, feature engineering, scaling, and tensor creation.
+    """
 
     def __init__(self, strategy: DataStrategy, config: DataStrategyConfig):
+        """
+        Args:
+            strategy: The feature engineering strategy to apply.
+            config: Configuration object containing data parameters.
+        """
         self.strategy = strategy
         self.cfg = config
         self.feature_scaler = self._get_scaler(config.scaler_type)
@@ -27,76 +34,76 @@ class DataPipeline:
             return RobustScaler()
         elif scaler_type == "standard":
             return StandardScaler()
-
-        raise ValueError(
-            f"Invalid scaler_type: '{scaler_type}'. Must be 'minmax', 'robust', or 'standard'."
-        )
+        
+        raise ValueError(f"Invalid scaler_type: '{scaler_type}'. Must be 'minmax', 'robust', or 'standard'.")
 
     def run(self) -> Dict[str, DataLoader]:
-        """Executes the pipeline and returns training and validation dataloaders."""
-        with mlflow.start_run(nested=True):
-            mlflow.log_params({
-                "ticker": self.cfg.ticker,
-                "strategy": type(self.strategy).__name__,
-                "scaler": self.cfg.scaler_type,
-                "seq_len": self.cfg.seq_len,
-                "split_ratio": self.cfg.train_split
-            })
+        """
+        Executes the pipeline and returns DataLoaders.
 
-            raw_df = fetch_data(
-                ticker=self.cfg.ticker,
-                period=self.cfg.period,
-                interval=self.cfg.interval
-            )
+        Logs parameters and metrics to the currently active MLflow run.
 
-            processed_df = self.strategy.apply_features(raw_df)
-            mlflow.log_metric("num_features_generated", processed_df.shape[1])
+        Returns:
+            Dict containing 'train' and 'val' PyTorch DataLoaders.
+        """
+        # Log configuration to the active run started by the Trainer
+        mlflow.log_params({
+            "ticker": self.cfg.ticker,
+            "strategy": type(self.strategy).__name__,
+            "scaler": self.cfg.scaler_type,
+            "seq_len": self.cfg.seq_len,
+            "split_ratio": self.cfg.train_split
+        })
 
-            # Drop artifacts from lagging/differencing
-            processed_df = processed_df.dropna()
+        raw_df = fetch_data(
+            ticker=self.cfg.ticker,
+            period=self.cfg.period,
+            interval=self.cfg.interval
+        )
 
-            target_col = "r_close"
+        processed_df = self.strategy.apply_features(raw_df)
+        mlflow.log_param("num_features_generated", processed_df.shape[1])
 
-            # Drop the target column from potential features
-            # Select ONLY numeric columns (floats/ints).
-            potential_features = processed_df.drop(
-                columns=[target_col], errors="ignore")
-            numeric_features = potential_features.select_dtypes(include=[
-                                                                np.number])
+        processed_df = processed_df.dropna()
 
-            feature_cols = numeric_features.columns.tolist()
+        target_col = "r_close"
+        
+        # Robustly select only numeric features, excluding target and timestamps
+        potential_features = processed_df.drop(columns=[target_col], errors="ignore")
+        numeric_features = potential_features.select_dtypes(include=[np.number])
+        feature_cols = numeric_features.columns.tolist()
 
-            # Align features (t) with targets (t+1)
-            features = processed_df[feature_cols].values[:-1]
-            targets = processed_df[target_col].shift(
-                -1).dropna().values.reshape(-1, 1)
+        # Align features (t) with targets (t+1)
+        features = processed_df[feature_cols].values[:-1]
+        targets = processed_df[target_col].shift(-1).dropna().values.reshape(-1, 1)
 
-            # Ensure strict alignment length
-            min_len = min(len(features), len(targets))
-            features = features[:min_len]
-            targets = targets[:min_len]
+        # Ensure strict length alignment
+        min_len = min(len(features), len(targets))
+        features = features[:min_len]
+        targets = targets[:min_len]
 
-            mlflow.log_metric("total_samples", len(features))
-            mlflow.log_metric("final_feature_count", features.shape[1])
+        mlflow.log_param("total_samples", len(features))
+        mlflow.log_param("final_feature_count", features.shape[1])
 
-            # Chronological split
-            split_idx = int(len(features) * self.cfg.train_split)
-            X_train, X_val = features[:split_idx], features[split_idx:]
-            y_train, y_val = targets[:split_idx], targets[split_idx:]
+        # Chronological Split
+        split_idx = int(len(features) * self.cfg.train_split)
+        X_train, X_val = features[:split_idx], features[split_idx:]
+        y_train, y_val = targets[:split_idx], targets[split_idx:]
 
-            # Fit scaler only on training set to avoid leakage
-            X_train = self.feature_scaler.fit_transform(X_train)
-            y_train = self.target_scaler.fit_transform(y_train)
+        # Fit scalers ONLY on training data
+        X_train = self.feature_scaler.fit_transform(X_train)
+        y_train = self.target_scaler.fit_transform(y_train)
 
-            X_val = self.feature_scaler.transform(X_val)
-            y_val = self.target_scaler.transform(y_val)
+        X_val = self.feature_scaler.transform(X_val)
+        y_val = self.target_scaler.transform(y_val)
 
-            return {
-                "train": self._create_loader(X_train, y_train, shuffle=True),
-                "val": self._create_loader(X_val, y_val, shuffle=False)
-            }
+        return {
+            "train": self._create_loader(X_train, y_train, shuffle=True),
+            "val": self._create_loader(X_val, y_val, shuffle=False)
+        }
 
     def _create_loader(self, X: np.ndarray, y: np.ndarray, shuffle: bool) -> DataLoader:
+        """Generates sliding window sequences."""
         X_seq, y_seq = [], []
         seq_len = self.cfg.seq_len
 
@@ -106,7 +113,9 @@ class DataPipeline:
 
         if not X_seq:
             raise ValueError(
-                f"Dataset too small ({len(X)}) for sequence length ({seq_len}).")
+                f"Dataset too small ({len(X)}) for sequence length ({seq_len}). "
+                "Try increasing the data period or decreasing seq_len."
+            )
 
         X_t = torch.tensor(np.stack(X_seq), dtype=torch.float32)
         y_t = torch.tensor(np.stack(y_seq), dtype=torch.float32)
@@ -119,7 +128,16 @@ class DataPipeline:
         )
 
     def inverse_transform_price(self, predicted_scaled_returns: torch.Tensor, last_known_price: float) -> np.ndarray:
-        """Converts scaled log-return predictions back to absolute price path."""
+        """
+        Converts scaled log-return predictions back to an absolute price path.
+        
+        Args:
+            predicted_scaled_returns: Model output tensor.
+            last_known_price: The actual price at the step before prediction started.
+            
+        Returns:
+            Array of predicted prices.
+        """
         if isinstance(predicted_scaled_returns, torch.Tensor):
             preds = predicted_scaled_returns.detach().cpu().numpy()
         else:
