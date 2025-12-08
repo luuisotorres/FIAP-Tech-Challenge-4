@@ -2,17 +2,16 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from fiap_tech_challenge_4.config import DataStrategyConfig, ModelParams
 
-# --- Training Schemas ---
+
+# Training Schemas
 class TrainingRequest(BaseModel):
     """Payload to trigger a training job."""
     experiment_name: str = "Stock_Forecaster_API"
     epochs: int = 10
     learning_rate: float = 1e-3
-    
-    # Reuse existing config models for validation consistency
+
     data: DataStrategyConfig
-    # Use Dict for model params to avoid Pydantic V2 conflict in nested init
-    model: Dict[str, Any] = Field(default_factory=lambda: {"hidden_dim": 64}) 
+    model: Dict[str, Any] = Field(default_factory=lambda: {"hidden_dim": 64})
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -48,12 +47,14 @@ class TrainingRequest(BaseModel):
         }
     )
 
+
 class TrainingResponse(BaseModel):
     message: str
     run_id: str
     status: str
 
-# --- Inference Schemas ---
+
+# Inference Schemas
 class StockCandle(BaseModel):
     """Represents a single time-step of OHLCV data."""
     open: float
@@ -62,13 +63,15 @@ class StockCandle(BaseModel):
     close: float
     volume: float
 
+
 class PredictionRequest(BaseModel):
     """
     Payload for inference. 
     Must contain enough historical candles to satisfy the model's sequence length + lag.
     """
     ticker: str
-    candles: List[StockCandle] = Field(..., description="List of historical candles.")
+    candles: List[StockCandle] = Field(...,
+                                       description="List of historical candles.")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -87,13 +90,31 @@ class PredictionRequest(BaseModel):
         }
     )
 
+
 class PredictionResponse(BaseModel):
     ticker: str
     predicted_return: float
     predicted_price: float
 
-# --- Promotion Schemas ---
+
+# Promotion Schemas
 class PromotionResponse(BaseModel):
     status: str
     message: str
     current_run_id: str
+
+
+# Observability Schemas
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    model_loaded: bool
+
+
+class ModelMetadataResponse(BaseModel):
+    """Details about the currently active production model."""
+    run_id: str = "unknown"
+    experiment_name: str
+    strategy_type: str
+    seq_len: int
+    model_params: Dict[str, Any]

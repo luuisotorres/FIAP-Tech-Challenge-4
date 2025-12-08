@@ -1,6 +1,12 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, status, Query
 from fiap_tech_challenge_4.schemas.requests import (
-    TrainingRequest, TrainingResponse, PredictionRequest, PredictionResponse, PromotionResponse
+    TrainingRequest,
+    TrainingResponse,
+    PredictionRequest,
+    PredictionResponse,
+    PromotionResponse,
+    HealthResponse,
+    ModelMetadataResponse,
 )
 from fiap_tech_challenge_4.services.training import execute_training_job
 from fiap_tech_challenge_4.services.inference import predict_next_step
@@ -49,10 +55,44 @@ async def predict(payload: PredictionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/model/promote", response_model=PromotionResponse)
+@router.post("/promote", response_model=PromotionResponse)
 def promote(run_id: str = Query(..., description="MLflow Run ID to deploy")):
     """Hot-swaps the active model with a version from MLflow."""
     try:
         return promote_model_from_registry(run_id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/health", response_model=HealthResponse)
+def health_check():
+    """
+    Liveness probe. Returns 200 if API is up.
+    Checks if a model is loaded in memory.
+    """
+    return HealthResponse(
+        status="ok",
+        version="2.0.0",
+        model_loaded=production_model.is_loaded
+    )
+
+
+@router.get("/model", response_model=ModelMetadataResponse)
+def get_active_model_info():
+    """
+    Returns the hyperparameters of the currently active model.
+    """
+    if not production_model.is_loaded or not production_model.config:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No model currently loaded."
+        )
+
+    cfg = production_model.config
+
+    return ModelMetadataResponse(
+        experiment_name=cfg.experiment_name,
+        strategy_type=cfg.data.strategy_type,
+        seq_len=cfg.data.seq_len,
+        model_params=cfg.model.model_dump()
+    )
