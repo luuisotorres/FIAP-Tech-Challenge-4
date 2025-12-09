@@ -120,6 +120,8 @@ class ModelTrainer:
         torch.save(model.state_dict(), model_path)
         joblib.dump(pipeline.feature_scaler, f_scaler_path)
         joblib.dump(pipeline.target_scaler, t_scaler_path)
+
+        self.cfg.run_id = run_id
         
         with open(config_path, "w") as f:
             f.write(self.cfg.model_dump_json(indent=2))
