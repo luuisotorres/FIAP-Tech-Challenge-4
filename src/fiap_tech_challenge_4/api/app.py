@@ -21,6 +21,8 @@ It supports **Training**, **Inference**, and **Model Promotion** via MLflow.
 * **Train:** Trigger async training jobs with custom strategies.
 * **Predict:** Get next-day price forecasts.
 * **Promote:** Hot-swap the live model with a specific MLflow run ID.
+* **Health:** Liveness probe.
+* **Model:** Returns the hyperparameters of the currently active model.
 
 This project was developed for **Tech Challenge 4 - Deep Learning and AI Module**,  
 and implemented by the team:
@@ -57,7 +59,7 @@ def create_app() -> FastAPI:
         description=description,
         version="1.0.0",
         lifespan=lifespan,
-        contact={"name": "Tech Challenge 4 Group", "email": "group@fiap.com"}
+        contact={"name": "Tech Challenge 4", "email": "group@fiap.com"}
     )
     app.include_router(router, prefix="/v1")
     return app

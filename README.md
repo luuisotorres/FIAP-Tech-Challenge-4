@@ -21,7 +21,7 @@ This application is designed with a **Service-Oriented Architecture (SOA)** patt
 The project uses the `src` layout managed by `uv`.
 
 ```text
-stock-forecaster/
+FIAP-Tech-Challenge-4/
 ├── .env                       # Environment variables (Credentials)
 ├── docker-compose.yml         # Container orchestration
 ├── Dockerfile                 # Image definition
@@ -31,7 +31,6 @@ stock-forecaster/
 └── src/
     └── fiap_tech_challenge_4/
         ├── config.py          # Pydantic Configurations (Data, Model, Training)
-        ├── main.py            # App entry point
         │
         ├── api/               # Interface Layer
         │   ├── app.py         # FastAPI App & Lifespan logic
@@ -123,7 +122,7 @@ Triggers an asynchronous training job. The API returns `202 Accepted` immediatel
 **Payload Example:**
 ```json
 {
-  "experiment_name": "AAPL_Trend_V1",
+  "experiment_name": "Stock_Forecaster_API",
   "epochs": 15,
   "learning_rate": 0.001,
   "data": {
@@ -147,10 +146,41 @@ Returns the forecasted price for the next day (t+1). Requires a list of historic
 uv run scripts/generate_mock_payload.py
 ```
 
-### 3. Promote Model (`POST /v1/model/promote`)
+### 3. Promote Model (`POST /v1/promote`)
 Downloads specific artifacts from a DagsHub MLflow Run and hot-swaps the active model in memory without restarting the server.
 
 **Query Param:** `run_id` (The hash string from MLflow).
+
+### 4. Health Check (`GET /v1/health`)
+
+Liveness probe for load balancers and monitoring tools. Returns 200 OK if the API is running and indicates if a production model is currently loaded in memory.
+
+**Response Example**: 
+```json 
+  { 
+    "status": "ok", 
+    "version": "1.0.0", 
+    "model_loaded": true 
+  }
+```
+
+### 5.Model Metadata (`GET /v1/model`)
+Returns the configuration and hyperparameters of the currently active production model. This is critical for observability to ensure the API is serving the correct version (avoiding "Ghost Models").
+
+Response Example: 
+```json 
+{ 
+  "run_id": "unknown", 
+  "experiment_name": "Stock_Forecaster_API", 
+  "strategy_type": "trend", 
+  "seq_len": 60, 
+  "model_params": { 
+    "hidden_dim": 64, 
+    "num_layers": 2, 
+    "dropout": 0.2 
+  } 
+} 
+```
 
 ---
 

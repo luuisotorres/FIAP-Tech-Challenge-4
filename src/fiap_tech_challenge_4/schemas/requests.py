@@ -16,7 +16,7 @@ class TrainingRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "experiment_name": "Smoke_Test_V1",
+                "experiment_name": "Stock_Forecaster_API",
                 "epochs": 5,
                 "learning_rate": 0.001,
                 "data": {

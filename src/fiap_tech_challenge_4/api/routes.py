@@ -72,7 +72,7 @@ def health_check():
     """
     return HealthResponse(
         status="ok",
-        version="2.0.0",
+        version="1.0.0",
         model_loaded=production_model.is_loaded
     )
 
