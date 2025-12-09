@@ -72,6 +72,7 @@ class TrainingConfig(BaseModel):
     Combines Data settings and Model settings.
     """
     experiment_name: str = "Stock_Forecaster_v1"
+    run_id: Optional[str] = None
     epochs: int = 10
     learning_rate: float = 1e-3
 

@@ -91,6 +91,7 @@ def get_active_model_info():
     cfg = production_model.config
 
     return ModelMetadataResponse(
+        run_id=cfg.run_id or "unknown",
         experiment_name=cfg.experiment_name,
         strategy_type=cfg.data.strategy_type,
         seq_len=cfg.data.seq_len,

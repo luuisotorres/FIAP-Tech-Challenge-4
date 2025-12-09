@@ -31,16 +31,16 @@ class ModelArtifacts:
 
         print(f"🔄 Loading production model from {artifact_dir}...")
 
-        # 1. Load Config
+        # Load Config
         with open(artifact_dir / "config.json", "r") as f:
             config_dict = json.load(f)
             self.config = TrainingConfig(**config_dict)
 
-        # 2. Load Scalers
+        # Load Scalers
         self.feature_scaler = joblib.load(artifact_dir / "feature_scaler.pkl")
         self.target_scaler = joblib.load(artifact_dir / "target_scaler.pkl")
 
-        # 3. Initialize Architecture
+        # Initialize Architecture
         # Infer input dimension from the fitted scaler
         input_dim = self.feature_scaler.n_features_in_
         
@@ -49,13 +49,14 @@ class ModelArtifacts:
             **self.config.model.model_dump()
         )
         
-        # 4. Load Weights
+        # Load Weights
         state_dict = torch.load(artifact_dir / "model.pt", map_location="cpu")
         self.model.load_state_dict(state_dict)
         self.model.eval() # Set to inference mode
         
         self.is_loaded = True
-        print("✅ Production model loaded successfully.")
+        active_id = self.config.run_id or "unknown"
+        print(f"✅ Production model loaded successfully. (Run ID: {active_id})")
 
 # Global Instance
 production_model = ModelArtifacts()
