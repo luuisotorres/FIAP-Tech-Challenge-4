@@ -4,12 +4,7 @@ from fiap_tech_challenge_4.modeling.trainer import ModelTrainer
 
 
 def execute_training_job(request: TrainingRequest) -> str:
-    """
-    Parses the API request, builds the config, and runs the trainer.
-    Returns the run_id.
-    """
-    # Convert API Request -> Internal Config
-    # Since request fields match Config fields, we can unpack
+    """Wrapper to run the ModelTrainer from an API request."""
     config = TrainingConfig(
         experiment_name=request.experiment_name,
         epochs=request.epochs,

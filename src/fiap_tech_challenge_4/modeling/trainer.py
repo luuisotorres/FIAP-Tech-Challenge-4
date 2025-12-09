@@ -106,19 +106,31 @@ class ModelTrainer:
             return run_id
 
     def _save_artifacts(self, pipeline: DataPipeline, model: torch.nn.Module, run_id: str):
-        """Persists model weights, scalers, and configuration to disk."""
+        """Persists artifacts to disk AND uploads them to MLflow."""
         save_path = self.artifacts_dir / run_id
         save_path.mkdir(parents=True, exist_ok=True)
 
-        # Weights
-        torch.save(model.state_dict(), save_path / "model.pt")
+        # Define paths
+        model_path = save_path / "model.pt"
+        config_path = save_path / "config.json"
+        f_scaler_path = save_path / "feature_scaler.pkl"
+        t_scaler_path = save_path / "target_scaler.pkl"
 
-        # Scalers (Required for inference)
-        joblib.dump(pipeline.feature_scaler, save_path / "feature_scaler.pkl")
-        joblib.dump(pipeline.target_scaler, save_path / "target_scaler.pkl")
-
-        # Configuration
-        with open(save_path / "config.json", "w") as f:
+        # Save to Local Disk
+        torch.save(model.state_dict(), model_path)
+        joblib.dump(pipeline.feature_scaler, f_scaler_path)
+        joblib.dump(pipeline.target_scaler, t_scaler_path)
+        
+        with open(config_path, "w") as f:
             f.write(self.cfg.model_dump_json(indent=2))
 
-        print(f"Artifacts saved to {save_path}")
+        print(f"✅ Artifacts saved locally to {save_path}")
+
+        # Upload to DagsHub/MLflow
+        # We upload each file to the root of the artifact directory for this run
+        print("⬆️ Uploading artifacts to MLflow...")
+        mlflow.log_artifact(str(model_path), artifact_path="")
+        mlflow.log_artifact(str(config_path), artifact_path="")
+        mlflow.log_artifact(str(f_scaler_path), artifact_path="")
+        mlflow.log_artifact(str(t_scaler_path), artifact_path="")
+        print("✅ Upload complete.")

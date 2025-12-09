@@ -5,6 +5,9 @@ description = "This project was developed for the ML Engineering Postgraduate Pr
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "boto3>=1.41.5",
+    "botocore>=1.41.5",
+    "dagshub>=0.6.3",
     "fastapi>=0.120.2",
     "matplotlib>=3.10.7",
     "mlflow>=3.6.0",
@@ -13,6 +16,7 @@ dependencies = [
     "optuna>=4.5.0",
     "pandas>=2.3.3",
     "plotly>=6.3.1",
+    "prometheus-fastapi-instrumentator>=7.1.0",
     "pydantic>=2.12.3",
     "pytorch-lightning>=2.5.6",
     "scikit-learn>=1.7.2",

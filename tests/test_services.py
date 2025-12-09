@@ -99,5 +99,5 @@ def test_predict_fails_insufficient_data(mock_singleton, mock_production_state):
                              close=100, volume=1000)]
     )
 
-    with pytest.raises(ValueError, match="Not enough data"):
+    with pytest.raises(ValueError, match="Not enough valid data"):
         predict_next_step(short_payload)
