@@ -2,10 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pathlib import Path
 from dotenv import load_dotenv
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from fiap_tech_challenge_4.api.routes import router
 from fiap_tech_challenge_4.core.state import production_model
-
 
 load_dotenv()
 ARTIFACTS_DIR = Path("artifacts")
@@ -62,6 +62,9 @@ def create_app() -> FastAPI:
         contact={"name": "Tech Challenge 4", "email": "group@fiap.com"}
     )
     app.include_router(router, prefix="/v1")
+
+    Instrumentator().instrument(app).expose(app)
+    
     return app
 
 
