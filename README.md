@@ -2,6 +2,10 @@
 
 A production-grade MLOps application for predicting stock prices using Long Short-Term Memory (LSTM) networks. This project implements a complete end-to-end pipeline including data ingestion, feature engineering, model training, experiment tracking, and serving via a high-performance Async API.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/luuisotorres/FIAP-Tech-Challenge-4)
+
+---
+
 ## 🚀 Overview
 
 This application is designed with a **Service-Oriented Architecture (SOA)** pattern to decouple the Machine Learning "Engine" from the API "Interface".
@@ -12,7 +16,8 @@ This application is designed with a **Service-Oriented Architecture (SOA)** patt
 * **Experiment Tracking:** Full integration with **MLflow (DagsHub)** for logging metrics, parameters, and artifacts.
 * **Async API:** FastAPI implementation with non-blocking training jobs using BackgroundTasks and Global Locks.
 * **Model Registry:** "Hot-swap" production models without restarting the server using the `/promote` endpoint.
-* **Dockerized:** Ready for deployment with full observability support.
+* **Observability:** Prometheus metrics + Grafana dashboards for real-time monitoring.
+* **Dockerized:** Ready for local development and cloud deployment.
 
 ---
 
@@ -23,17 +28,21 @@ The project uses the `src` layout managed by `uv`.
 ```text
 FIAP-Tech-Challenge-4/
 ├── .env                       # Environment variables (Credentials)
-├── docker-compose.yml         # Container orchestration
-├── Dockerfile                 # Image definition
+├── .dockerignore              # Excludes .venv, .git from Docker builds
+├── docker-compose.yml         # Container orchestration (API + Prometheus + Grafana)
+├── Dockerfile                 # Image definition (uv-based)
+├── prometheus.yml             # Prometheus scrape configuration
+├── render.yaml                # Render.com deployment blueprint
 ├── pyproject.toml             # Dependencies (uv)
-├── scripts/                   # Utility scripts (Smoke tests, data generation)
+├── scripts/                   # Utility scripts
+│   └── generate_mock_payload.py  # Creates valid /predict payloads
 ├── tests/                     # Pytest suite
 └── src/
     └── fiap_tech_challenge_4/
         ├── config.py          # Pydantic Configurations (Data, Model, Training)
         │
         ├── api/               # Interface Layer
-        │   ├── app.py         # FastAPI App & Lifespan logic
+        │   ├── app.py         # FastAPI App, Lifespan, Landing Page
         │   └── routes.py      # Endpoints (/train, /predict, /promote)
         │
         ├── core/              # State Management
@@ -43,14 +52,14 @@ FIAP-Tech-Challenge-4/
         │   └── loader.py      # yfinance Ingestion
         │
         ├── features/          # Feature Engineering Layer
-        │   ├── library.py     # Stateless Math Functions
+        │   ├── features.py    # Stateless Math Functions (RSI, MACD, SMA)
         │   ├── strategies.py  # Strategy Patterns (Trend/MeanReversion)
         │   └── pipeline.py    # Scaling, Splitting & Tensor Creation
         │
         ├── modeling/          # ML Core Layer
         │   ├── lstm.py              # PyTorch LSTM Architecture
-        │   ├── lightning_module.py  # Training Loop Wrapper
-        │   └── trainer.py           # Training Orchestrator
+        │   ├── lightning_module.py  # PyTorch Lightning Training Wrapper
+        │   └── trainer.py           # Training Orchestrator + MLflow Logging
         │
         ├── schemas/           # API Contracts (DTOs)
         │   └── requests.py    # Request/Response models
@@ -66,9 +75,9 @@ FIAP-Tech-Challenge-4/
 ## 🛠️ Setup & Installation
 
 ### Prerequisites
-* Python 3.10+
+* Python 3.12+
 * [uv](https://github.com/astral-sh/uv) (Fast Python package installer)
-* Docker (Optional, for container run)
+* Docker & Docker Compose (for containerized runs)
 
 ### 1. Clone and Sync
 ```bash
@@ -78,8 +87,13 @@ uv sync
 ```
 
 ### 2. Configure Environment
-Create a `.env` file in the root directory. You need DagsHub credentials for experiment tracking.
+Copy the example file and fill in your DagsHub credentials:
 
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
 ```ini
 # .env
 MLFLOW_TRACKING_URI=https://dagshub.com/<your-username>/<your-repo>.mlflow
@@ -96,110 +110,166 @@ AWS_SECRET_ACCESS_KEY=<your-token>
 
 ## 🏃 Usage
 
-### Running Locally (Developer Mode)
+### Option 1: Running Locally
 Start the API with hot-reloading enabled.
 
 ```bash
-uv run uvicorn fiap_tech_challenge_4.api.app:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn --app-dir src fiap_tech_challenge_4.api.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Access the **Swagger UI** at: [http://localhost:8000/docs](http://localhost:8000/docs)
+Access the application:
+* **Landing Page:** [http://localhost:8000](http://localhost:8000)
+* **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
+* **ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-### Running with Docker (Production Mode)
-Build and run the entire stack.
+### Option 2: Running with Docker Compose (Full Stack)
+Build and run the entire observability stack (API + Prometheus + Grafana).
 
 ```bash
 docker compose up --build
 ```
 
+Access the services:
+| Service    | URL                         | Credentials     |
+|------------|-----------------------------|-----------------| 
+| API        | http://localhost:8000       | -               |
+| Prometheus | http://localhost:9091       | -               |
+| Grafana    | http://localhost:3000       | admin / admin   |
+
+**Grafana Setup:**
+1. Go to **Connections** → **Data Sources** → **Add data source**
+2. Select **Prometheus**
+3. Set URL to `http://prometheus:9090`
+4. Click **Save & test**
+5. Import Dashboard ID `18739` for FastAPI metrics
+
+---
+
+## ☁️ Cloud Deployment (Render)
+
+This project includes a `render.yaml` blueprint for one-click deployment to [Render](https://render.com).
+
+### Steps:
+1. Push your code to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click **New** → **Blueprint**
+4. Connect your repository
+5. Render will auto-detect `render.yaml`
+6. Add your environment variables (same as `.env`)
+7. Click **Apply**
+
+Your API will be live at: `https://stock-forecaster-api.onrender.com`
+
 ---
 
 ## 📡 API Endpoints
 
-### 1. Train a Model (`POST /v1/train`)
-Triggers an asynchronous training job. The API returns `202 Accepted` immediately, and training continues in the background. Metrics are logged to DagsHub.
+| Method | Endpoint       | Description                                      |
+|--------|----------------|--------------------------------------------------|
+| GET    | `/`            | Landing page with links to documentation         |
+| GET    | `/v1/health`   | Liveness probe (returns model loaded status)     |
+| GET    | `/v1/model`    | Returns active model hyperparameters             |
+| POST   | `/v1/train`    | Triggers async training job (returns 202)        |
+| POST   | `/v1/predict`  | Returns next-day price forecast                  |
+| POST   | `/v1/promote`  | Hot-swaps model from MLflow run ID               |
 
-**Payload Example:**
-```json
-{
-  "experiment_name": "Stock_Forecaster_API",
-  "epochs": 15,
-  "learning_rate": 0.001,
-  "data": {
-    "ticker": "AAPL",
-    "strategy_type": "trend",
-    "scaler_type": "robust",
-    "seq_len": 60
-  },
-  "model": {
-    "hidden_dim": 64,
-    "num_layers": 2
-  }
-}
+### Example: Train a Model
+```bash
+curl -X POST http://localhost:8000/v1/train \
+  -H "Content-Type: application/json" \
+  -d '{
+    "experiment_name": "Stock_Forecaster_API",
+    "epochs": 15,
+    "learning_rate": 0.001,
+    "data": {
+      "ticker": "AAPL",
+      "strategy_type": "trend",
+      "scaler_type": "robust",
+      "seq_len": 60
+    },
+    "model": {
+      "hidden_dim": 64,
+      "num_layers": 2
+    }
+  }'
 ```
 
-### 2. Predict Prices (`POST /v1/predict`)
-Returns the forecasted price for the next day (t+1). Requires a list of historical candles equal to `seq_len` + feature lag requirements.
-
-**Note:** You can generate a valid mock payload using the script:
+### Example: Generate Mock Prediction Payload
 ```bash
 uv run scripts/generate_mock_payload.py
+# Then copy content of mock_payload.json to POST /v1/predict
 ```
 
-### 3. Promote Model (`POST /v1/promote`)
-Downloads specific artifacts from a DagsHub MLflow Run and hot-swaps the active model in memory without restarting the server.
+---
 
-**Query Param:** `run_id` (The hash string from MLflow).
+## 📊 Observability
 
-### 4. Health Check (`GET /v1/health`)
+### Prometheus Metrics
+The API exposes metrics at `/metrics` via `prometheus-fastapi-instrumentator`.
 
-Liveness probe for load balancers and monitoring tools. Returns 200 OK if the API is running and indicates if a production model is currently loaded in memory.
+Key metrics include:
+* `http_requests_total` - Request counts by endpoint
+* `http_request_duration_seconds` - Latency histograms
+* `http_requests_in_progress` - Concurrent requests
 
-**Response Example**: 
-```json 
-  { 
-    "status": "ok", 
-    "version": "1.0.0", 
-    "model_loaded": true 
-  }
+### Grafana Dashboards
+Import Dashboard ID `18739` ("FastAPI Observability") for pre-built visualizations.
+
+### MLflow/DagsHub
+Training metrics (loss, MAE) are logged to DagsHub in real-time. Access your experiments at:
 ```
-
-### 5.Model Metadata (`GET /v1/model`)
-Returns the configuration and hyperparameters of the currently active production model. This is critical for observability to ensure the API is serving the correct version (avoiding "Ghost Models").
-
-Response Example: 
-```json 
-{ 
-  "run_id": "unknown", 
-  "experiment_name": "Stock_Forecaster_API", 
-  "strategy_type": "trend", 
-  "seq_len": 60, 
-  "model_params": { 
-    "hidden_dim": 64, 
-    "num_layers": 2, 
-    "dropout": 0.2 
-  } 
-} 
+https://dagshub.com/<your-username>/<your-repo>/experiments
 ```
 
 ---
 
 ## 🧪 Testing
 
-The project maintains high test coverage using `pytest` and `unittest.mock` to simulate external services (DagsHub, yfinance).
+The project maintains high test coverage using `pytest` and `unittest.mock`.
 
-Run the full suite:
 ```bash
+# Run all tests
 uv run pytest tests/
+
+# Run with coverage report
+uv run pytest tests/ --cov=src --cov-report=html
+```
+
+---
+
+## 🐳 Docker Commands Reference
+
+```bash
+# Build and start all services
+docker compose up --build
+
+# Start in detached mode
+docker compose up -d
+
+# View logs
+docker compose logs -f api
+
+# Stop all services
+docker compose down
+
+# Rebuild only the API
+docker compose build api
 ```
 
 ---
 
 ## 👥 Authors
-Developed for FIAP - Tech Challenge 4.
+
+Developed for FIAP - Tech Challenge 4 (ML Engineering Postgraduate Program).
 
 * Izabelly de Oliveira Menezes
 * Larissa Diniz da Silva
 * Luis Fernando Torres
 * Rafael Dos Santos Callegari
 * Renato Massamitsu Zama Inomata
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

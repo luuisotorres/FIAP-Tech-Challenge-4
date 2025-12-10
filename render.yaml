@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: stock-forecaster-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: MLFLOW_TRACKING_URI
+        sync: false
+      - key: MLFLOW_TRACKING_USERNAME
+        sync: false
+      - key: MLFLOW_TRACKING_PASSWORD
+        sync: false
+      - key: MLFLOW_S3_ENDPOINT_URL
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+    healthCheckPath: /v1/health
