@@ -59,7 +59,6 @@ def create_app() -> FastAPI:
         description=description,
         version="1.0.0",
         lifespan=lifespan,
-        contact={"name": "Tech Challenge 4", "email": "group@fiap.com"}
     )
     app.include_router(router, prefix="/v1")
 

@@ -1,27 +1,55 @@
 # FIAP Tech Challenge 4 - Stock Forecaster API
 
-A production-grade MLOps application for predicting stock prices using Long Short-Term Memory (LSTM) networks. This project implements a complete end-to-end pipeline including data ingestion, feature engineering, model training, experiment tracking, and serving via a high-performance Async API.
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![MLflow](https://img.shields.io/badge/MLflow-0194E2?style=for-the-badge&logo=mlflow&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=Prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white)
+![Render](https://img.shields.io/badge/Render-%46E3B7.svg?style=for-the-badge&logo=render&logoColor=white)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/luuisotorres/FIAP-Tech-Challenge-4)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://stock-forecaster-api.onrender.com)
+
+A production-grade MLOps application for predicting stock prices using Long Short-Term Memory (LSTM) networks. This project implements a complete end-to-end pipeline including data ingestion, feature engineering, model training, experiment tracking, and serving via a high-performance Async API.
 
 ---
 
-## 🚀 Overview
+## Table of Contents
+
+- [Overview](#overview)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Setup & Installation](#setup--installation)
+- [Usage](#usage)
+- [Observability](#observability)
+- [Cloud Deployment (Render)](#cloud-deployment-render)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Docker Commands Reference](#docker-commands-reference)
+- [Authors](#authors)
+- [License](#license)
+
+---
+
+## Overview
 
 This application is designed with a **Service-Oriented Architecture (SOA)** pattern to decouple the Machine Learning "Engine" from the API "Interface".
 
+![Landing Page](assets/screenshots/landing_page.png)
+
 **Key Features:**
-* **Deep Learning:** Custom LSTM architecture with MLP head for time-series regression.
-* **Modular Pipeline:** Robust feature engineering (RSI, MACD, SMA) using Pydantic configuration.
-* **Experiment Tracking:** Full integration with **MLflow (DagsHub)** for logging metrics, parameters, and artifacts.
-* **Async API:** FastAPI implementation with non-blocking training jobs using BackgroundTasks and Global Locks.
-* **Model Registry:** "Hot-swap" production models without restarting the server using the `/promote` endpoint.
-* **Observability:** Prometheus metrics + Grafana dashboards for real-time monitoring.
-* **Dockerized:** Ready for local development and cloud deployment.
+*   **Deep Learning:** Custom LSTM architecture with MLP head for time-series regression.
+*   **Modular Pipeline:** Robust feature engineering (RSI, MACD, SMA) using Pydantic configuration.
+*   **Experiment Tracking:** Full integration with **MLflow (DagsHub)** for logging metrics, parameters, and artifacts.
+*   **Async API:** FastAPI implementation with non-blocking training jobs using BackgroundTasks and Global Locks.
+*   **Model Registry:** "Hot-swap" production models without restarting the server using the `/promote` endpoint.
+*   **Observability:** Prometheus metrics + Grafana dashboards for real-time monitoring.
+*   **Dockerized:** Ready for local development and cloud deployment.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 The project uses the `src` layout managed by `uv`.
 
@@ -43,7 +71,7 @@ FIAP-Tech-Challenge-4/
         │
         ├── api/               # Interface Layer
         │   ├── app.py         # FastAPI App, Lifespan, Landing Page
-        │   └── routes.py      # Endpoints (/train, /predict, /promote)
+        │   ├── routes.py      # Endpoints (/train, /predict, /promote)
         │
         ├── core/              # State Management
         │   └── state.py       # Singleton ModelArtifacts (In-Memory State)
@@ -72,12 +100,32 @@ FIAP-Tech-Challenge-4/
 
 ---
 
-## 🛠️ Setup & Installation
+## Quick Start
+Get the application running locally in minutes:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/luuisotorres/FIAP-Tech-Challenge-4.git
+cd FIAP-Tech-Challenge-4
+
+# 2. Install dependencies (using uv)
+uv sync
+
+# 3. Configure environment
+cp .env.example .env
+
+# 4. Start services
+docker compose up --build
+```
+
+---
+
+## Setup & Installation
 
 ### Prerequisites
-* Python 3.12+
-* [uv](https://github.com/astral-sh/uv) (Fast Python package installer)
-* Docker & Docker Compose (for containerized runs)
+*   Python 3.12+
+*   [uv](https://github.com/astral-sh/uv) (Fast Python package installer)
+*   Docker & Docker Compose (for containerized runs)
 
 ### 1. Clone and Sync
 ```bash
@@ -108,7 +156,7 @@ AWS_SECRET_ACCESS_KEY=<your-token>
 
 ---
 
-## 🏃 Usage
+## Usage
 
 ### Option 1: Running Locally
 Start the API with hot-reloading enabled.
@@ -118,9 +166,9 @@ uv run uvicorn --app-dir src fiap_tech_challenge_4.api.app:app --reload --host 0
 ```
 
 Access the application:
-* **Landing Page:** [http://localhost:8000](http://localhost:8000)
-* **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+*   **Landing Page:** [http://localhost:8000](http://localhost:8000)
+*   **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
+*   **ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ### Option 2: Running with Docker Compose (Full Stack)
 Build and run the entire observability stack (API + Prometheus + Grafana).
@@ -131,38 +179,64 @@ docker compose up --build
 
 Access the services:
 | Service    | URL                         | Credentials     |
-|------------|-----------------------------|-----------------| 
+|------------|-----------------------------|-----------------|
 | API        | http://localhost:8000       | -               |
 | Prometheus | http://localhost:9091       | -               |
 | Grafana    | http://localhost:3000       | admin / admin   |
 
 **Grafana Setup:**
-1. Go to **Connections** → **Data Sources** → **Add data source**
-2. Select **Prometheus**
-3. Set URL to `http://prometheus:9090`
-4. Click **Save & test**
-5. Import Dashboard ID `18739` for FastAPI metrics
+1.  Go to **Connections** → **Data Sources** → **Add data source**
+2.  Select **Prometheus**
+3.  Set URL to `http://prometheus:9090`
+4.  Click **Save & test**
+5.  Import Dashboard ID `18739` for FastAPI metrics
 
 ---
 
-## ☁️ Cloud Deployment (Render)
+## Observability
+
+### Prometheus & Grafana
+The API is fully instrumented with Prometheus metrics. Use the pre-configured Grafana dashboard to monitor request latency, error rates, and resource usage.
+
+![Grafana Dashboard](assets/screenshots/grafana_dashboard.png)
+
+### MLflow & DagsHub
+We use **MLflow** integrated with **DagsHub** for comprehensive experiment tracking. Every training run logs:
+*   **Parameters:** Hyperparameters (conf, epochs, lr, etc.)
+*   **Metrics:** Loss (Training/Validation), MAE.
+*   **Artifacts:** The saved PyTorch model (`.ckpt`) and scaler objects.
+
+![MLflow Dashboard](assets/screenshots/mlflow_dashboard.png)
+
+Access your experiments at:
+```
+https://dagshub.com/<your-username>/<your-repo>/experiments
+```
+
+---
+
+## Cloud Deployment (Render)
 
 This project includes a `render.yaml` blueprint for one-click deployment to [Render](https://render.com).
 
 ### Steps:
-1. Push your code to GitHub
-2. Go to [Render Dashboard](https://dashboard.render.com)
-3. Click **New** → **Blueprint**
-4. Connect your repository
-5. Render will auto-detect `render.yaml`
-6. Add your environment variables (same as `.env`)
-7. Click **Apply**
+1.  Push your code to GitHub
+2.  Go to [Render Dashboard](https://dashboard.render.com)
+3.  Click **New** → **Blueprint**
+4.  Connect your repository
+5.  Render will auto-detect `render.yaml`
+6.  Add your environment variables (same as `.env`)
+7.  Click **Apply**
 
 Your API will be live at: `https://stock-forecaster-api.onrender.com`
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
+
+Full documentation is available via Swagger UI.
+
+![Swagger Docs](assets/screenshots/swagger_doc.png)
 
 | Method | Endpoint       | Description                                      |
 |--------|----------------|--------------------------------------------------|
@@ -202,28 +276,7 @@ uv run scripts/generate_mock_payload.py
 
 ---
 
-## 📊 Observability
-
-### Prometheus Metrics
-The API exposes metrics at `/metrics` via `prometheus-fastapi-instrumentator`.
-
-Key metrics include:
-* `http_requests_total` - Request counts by endpoint
-* `http_request_duration_seconds` - Latency histograms
-* `http_requests_in_progress` - Concurrent requests
-
-### Grafana Dashboards
-Import Dashboard ID `18739` ("FastAPI Observability") for pre-built visualizations.
-
-### MLflow/DagsHub
-Training metrics (loss, MAE) are logged to DagsHub in real-time. Access your experiments at:
-```
-https://dagshub.com/<your-username>/<your-repo>/experiments
-```
-
----
-
-## 🧪 Testing
+## Testing
 
 The project maintains high test coverage using `pytest` and `unittest.mock`.
 
@@ -237,7 +290,7 @@ uv run pytest tests/ --cov=src --cov-report=html
 
 ---
 
-## 🐳 Docker Commands Reference
+## Docker Commands Reference
 
 ```bash
 # Build and start all services
@@ -258,18 +311,17 @@ docker compose build api
 
 ---
 
-## 👥 Authors
+## Authors
 
 Developed for FIAP - Tech Challenge 4 (ML Engineering Postgraduate Program).
 
-* Izabelly de Oliveira Menezes
-* Larissa Diniz da Silva
-* Luis Fernando Torres
-* Rafael Dos Santos Callegari
-* Renato Massamitsu Zama Inomata
-
+* Izabelly de Oliveira Menezes | [Github](https://github.com/izabellyomenezes)
+* Larissa Diniz da Silva | [Github](https://github.com/Ldiniz737)
+* Luis Fernando Torres | [Github](https://github.com/luuisotorres)
+* Rafael dos Santos Callegari | [Github](https://github.com/rafaelcallegari)
+* Renato Massamitsu Zama Inomata | [Github](https://github.com/renatoinomata)
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
