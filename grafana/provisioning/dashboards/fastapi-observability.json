@@ -480,13 +480,13 @@
                             "tooltip": false,
                             "viz": false
                         },
-                        "lineWidth": 1,
-                        "pointSize": 5,
+                        "lineWidth": 2,
+                        "pointSize": 8,
                         "scaleDistribution": {
                             "type": "linear"
                         },
-                        "showPoints": "auto",
-                        "spanNulls": false,
+                        "showPoints": "always",
+                        "spanNulls": true,
                         "stacking": {
                             "group": "A",
                             "mode": "none"
