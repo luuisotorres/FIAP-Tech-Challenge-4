@@ -37,7 +37,7 @@ This application is designed with a **Service-Oriented Architecture (SOA)** patt
 **Key Features:**
 *   **Deep Learning:** Custom LSTM architecture with MLP head for time-series regression.
 *   **Modular Pipeline:** Robust feature engineering (RSI, MACD, SMA) using Pydantic configuration.
-*   **Experiment Tracking:** Full integration with **MLflow (DagsHub)** for logging metrics, parameters, and artifacts.
+*   **Experiment Tracking:** Full integration with **MLflow** for logging metrics, parameters, and artifacts.
 *   **Async API:** FastAPI implementation with non-blocking training jobs using BackgroundTasks and Global Locks.
 *   **Model Registry:** "Hot-swap" production models without restarting the server using the `/promote` endpoint.
 *   **Observability:** Prometheus metrics + Grafana dashboards for real-time monitoring.
@@ -130,7 +130,7 @@ uv sync
 ```
 
 ### 2. Configure Environment
-Copy the example file and fill in your DagsHub credentials:
+Copy the example file:
 
 ```bash
 cp .env.example .env
@@ -139,14 +139,7 @@ cp .env.example .env
 Edit `.env` with your credentials:
 ```ini
 # .env
-MLFLOW_TRACKING_URI=https://dagshub.com/<your-username>/<your-repo>.mlflow
-MLFLOW_TRACKING_USERNAME=<your-username>
-MLFLOW_TRACKING_PASSWORD=<your-token>
-
-# Required for Artifact Downloads (DagsHub S3 Proxy)
-MLFLOW_S3_ENDPOINT_URL=https://dagshub.com/api/v1/repo-buckets/s3
-AWS_ACCESS_KEY_ID=<your-username>
-AWS_SECRET_ACCESS_KEY=<your-token>
+MLFLOW_TRACKING_URI=http://mlflow:5000
 ```
 
 ---
@@ -177,6 +170,7 @@ Access the services:
 |------------|-----------------------------|-----------------|
 | API        | http://localhost:8000       | -               |
 | Prometheus | http://localhost:9091       | -               |
+| MLFlow     | http://localhost:5000       | -               |
 | Grafana    | http://localhost:3000       | admin / admin   |
 
 **Grafana Dashboard:**
@@ -192,18 +186,13 @@ The API is fully instrumented with Prometheus metrics. Use the pre-configured Gr
 
 ![Grafana Dashboard](assets/screenshots/grafana_dashboard.png)
 
-### MLflow & DagsHub
-We use **MLflow** integrated with **DagsHub** for comprehensive experiment tracking. Every training run logs:
+### MLflow
+We use **MLflow** for comprehensive experiment tracking. Every training run logs:
 *   **Parameters:** Hyperparameters (conf, epochs, lr, etc.)
 *   **Metrics:** Loss (Training/Validation), MAE.
 *   **Artifacts:** The saved PyTorch model (`.ckpt`) and scaler objects.
 
 ![MLflow Dashboard](assets/screenshots/mlflow_dashboard.png)
-
-Access your experiments at:
-```
-https://dagshub.com/<your-username>/<your-repo>/experiments
-```
 
 ---
 
