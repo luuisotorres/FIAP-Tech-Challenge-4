@@ -106,6 +106,12 @@ def create_app() -> FastAPI:
                     transform: translateY(-2px);
                     box-shadow: 0 4px 20px rgba(0,212,255,0.4);
                 }
+                .btn-grafana {
+                    background: linear-gradient(90deg, #00d4ff, #0099ff);
+                }
+                .btn-grafana:hover {
+                    box-shadow: 0 4px 20px rgba(0,212,255,0.4);
+                }
                 .team { margin-top: 40px; font-size: 12px; color: #666; }
             </style>
         </head>
@@ -116,6 +122,7 @@ def create_app() -> FastAPI:
                 <a href="/docs" class="btn">🔍 Swagger UI</a>
                 <a href="/redoc" class="btn">📖 ReDoc</a>
                 <a href="/v1/health" class="btn">💚 Health Check</a>
+                <a href="http://localhost:3000/d/fastapi-observability/" class="btn btn-grafana">📊 Grafana Dashboard</a>
                 <div class="team">
                     FIAP Tech Challenge 4 | ML Engineering Postgraduate Program
                 </div>

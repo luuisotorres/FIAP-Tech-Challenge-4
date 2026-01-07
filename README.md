@@ -7,9 +7,6 @@
 ![MLflow](https://img.shields.io/badge/MLflow-0194E2?style=for-the-badge&logo=mlflow&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=Prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white)
-![Render](https://img.shields.io/badge/Render-%46E3B7.svg?style=for-the-badge&logo=render&logoColor=white)
-
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://stock-forecaster-api.onrender.com)
 
 A production-grade MLOps application for predicting stock prices using Long Short-Term Memory (LSTM) networks. This project implements a complete end-to-end pipeline including data ingestion, feature engineering, model training, experiment tracking, and serving via a high-performance Async API.
 
@@ -23,7 +20,6 @@ A production-grade MLOps application for predicting stock prices using Long Shor
 - [Setup & Installation](#setup--installation)
 - [Usage](#usage)
 - [Observability](#observability)
-- [Cloud Deployment (Render)](#cloud-deployment-render)
 - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
 - [Docker Commands Reference](#docker-commands-reference)
@@ -60,7 +56,6 @@ FIAP-Tech-Challenge-4/
 ├── docker-compose.yml         # Container orchestration (API + Prometheus + Grafana)
 ├── Dockerfile                 # Image definition (uv-based)
 ├── prometheus.yml             # Prometheus scrape configuration
-├── render.yaml                # Render.com deployment blueprint
 ├── pyproject.toml             # Dependencies (uv)
 ├── scripts/                   # Utility scripts
 │   └── generate_mock_payload.py  # Creates valid /predict payloads
@@ -184,12 +179,9 @@ Access the services:
 | Prometheus | http://localhost:9091       | -               |
 | Grafana    | http://localhost:3000       | admin / admin   |
 
-**Grafana Setup:**
-1.  Go to **Connections** → **Data Sources** → **Add data source**
-2.  Select **Prometheus**
-3.  Set URL to `http://prometheus:9090`
-4.  Click **Save & test**
-5.  Import Dashboard ID `18739` for FastAPI metrics
+**Grafana Dashboard:**
+The dashboard is **auto-provisioned** - no manual setup required! Just navigate to:
+`http://localhost:3000/d/fastapi-observability/`
 
 ---
 
@@ -212,23 +204,6 @@ Access your experiments at:
 ```
 https://dagshub.com/<your-username>/<your-repo>/experiments
 ```
-
----
-
-## Cloud Deployment (Render)
-
-This project includes a `render.yaml` blueprint for one-click deployment to [Render](https://render.com).
-
-### Steps:
-1.  Push your code to GitHub
-2.  Go to [Render Dashboard](https://dashboard.render.com)
-3.  Click **New** → **Blueprint**
-4.  Connect your repository
-5.  Render will auto-detect `render.yaml`
-6.  Add your environment variables (same as `.env`)
-7.  Click **Apply**
-
-Your API will be live at: `https://stock-forecaster-api.onrender.com`
 
 ---
 
