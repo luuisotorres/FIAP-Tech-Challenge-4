@@ -128,7 +128,6 @@ class ModelTrainer:
 
         print(f"✅ Artifacts saved locally to {save_path}")
 
-        # Upload to DagsHub/MLflow
         # We upload each file to the root of the artifact directory for this run
         print("⬆️ Uploading artifacts to MLflow...")
         mlflow.log_artifact(str(model_path), artifact_path="")

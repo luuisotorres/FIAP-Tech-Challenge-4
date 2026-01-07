@@ -11,7 +11,6 @@ from fiap_tech_challenge_4.config import (
 from fiap_tech_challenge_4.modeling.trainer import ModelTrainer
 
 def run_smoke_test():
-    # Load Environment Variables (DagsHub Credentials)
     load_dotenv()
     
     tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
@@ -19,7 +18,6 @@ def run_smoke_test():
         print("❌ Error: MLFLOW_TRACKING_URI not found in .env")
         return
 
-    print(f"🚀 Connecting to DagsHub MLflow: {tracking_uri}")
     mlflow.set_tracking_uri(tracking_uri)
 
     # Define a Real Configuration
@@ -55,7 +53,6 @@ def run_smoke_test():
         run_id = trainer.train()
         print("\n✅ Success! Training completed.")
         print(f"🆔 Run ID: {run_id}")
-        print(f"🔗 Check your DagsHub UI: {tracking_uri.replace('.mlflow', '/experiments')}")
     except Exception as e:
         print("\n❌ Training Failed:")
         print(e)

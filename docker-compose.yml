@@ -9,6 +9,7 @@ services:
       - ./mlruns:/app/mlruns
     depends_on:
       - prometheus
+      - mlflow
 
   prometheus:
     image: prom/prometheus
@@ -25,3 +26,20 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
+
+  mlflow:
+      image: python:3.10-slim
+      container_name: mlflow
+      ports:
+        - "5000:5000"
+      volumes:
+        - ./mlruns:/mlruns
+      command: >
+        bash -c "
+        pip install --no-cache-dir mlflow==2.9.2 &&
+        mlflow server
+        --host 0.0.0.0
+        --port 5000
+        --backend-store-uri file:///mlruns
+        --default-artifact-root file:///mlruns
+        "
